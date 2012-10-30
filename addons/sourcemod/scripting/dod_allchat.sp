@@ -42,7 +42,7 @@ public Plugin:myinfo =
 /* OnPluginStart()
  *
  * When the plugin starts up.
- * ---------------------------------------------------------------------- */
+ * --------------------------------------------------------------------- */
 public OnPluginStart()
 {
 	// Create ConVars
@@ -61,7 +61,7 @@ public OnPluginStart()
 /* Command_Say()
  *
  * When the chat message is received in global chat.
- * ------------------------------------------------------------------ */
+ * --------------------------------------------------------------------- */
 public Action:Command_Say(client, const String:command[], argc)
 {
 	// Whether or not relay chat of dead players
@@ -99,7 +99,7 @@ public Action:Command_Say(client, const String:command[], argc)
 /* Command_SayTeam()
  *
  * When the chat message is received in team chat.
- * ------------------------------------------------------------------ */
+ * --------------------------------------------------------------------- */
 public Action:Command_SayTeam(client, const String:command[], argc)
 {
 	if (GetConVarInt(allchat_team) > 0)
@@ -115,7 +115,7 @@ public Action:Command_SayTeam(client, const String:command[], argc)
 			// Return the value of 'team chat' cvar
 			switch (GetConVarInt(allchat_team))
 			{
-				case 1: // Message should be sended to all players
+				case 1: // 1: Message should be sended to all players
 				{
 					// This function adds (Dead) prefix
 					Format(status, sizeof(status), "%s", IsPlayerAlive(client) ? NULL_STRING : "(Dead)", client);
@@ -129,7 +129,7 @@ public Action:Command_SayTeam(client, const String:command[], argc)
 					}
 					return Plugin_Handled;
 				}
-				case 2: // Message should be send only for teammates (if client is obviously dead)
+				case 2: // 2: Message should be send only for teammates (if client is obviously dead)
 				{
 					for (new mates = 1; mates <= MaxClients; mates++)
 					{
@@ -162,9 +162,9 @@ public Action:Command_SayTeam(client, const String:command[], argc)
 /* IsValidClient()
  *
  * Checks if a client is valid.
- * ---------------------------------------------------------------------- */
+ * --------------------------------------------------------------------- */
 bool:IsValidClient(client)
 {
-	// Check if client is ingame and not a server
+	// Default check if client is valid
 	return (client > 0 && IsClientInGame(client)) ? true : false;
 }
