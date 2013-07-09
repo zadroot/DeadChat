@@ -29,7 +29,7 @@ public Plugin:myinfo =
 {
 	name        = PLUGIN_NAME,
 	author      = "Root",
-	description = "Provides a support to relay chat messages of dead players, spectators or a team chat",
+	description = "Provides a support to relay messages of dead players, spectators or a team chat",
 	version     = PLUGIN_VERSION,
 	url         = "http://dodsplugins.com/"
 };
@@ -105,22 +105,18 @@ public Action:SayTextHook(UserMsg:msg_id, Handle:bf, const players[], playersNum
  * --------------------------------------------------------------------------- */
 public Event_PlayerSay(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	// NOTES:
 	// We can not rely only on HookUserMessage() because this event can fired more than once for the same chat messages under certain conditions
 	// This will result in duplicate messages
-	decl client, i, clients[MaxClients], numClients, Handle:SayText;
+	new clients[MaxClients], numClients;
 
 	// Get message author
-	client = GetClientOfUserId(GetEventInt(event, "userid"));
-
-	// Reset amount of clients to relay
-	numClients = 0;
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
 	// Team chat and convar value is initialized
 	if (IsTeamChat && GetConVarBool(allchat_team))
 	{
 		// Then send this message to all team mates
-		for (i = 1; i <= MaxClients; i++)
+		for (new i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i) && GetClientTeam(i) == GetClientTeam(client) && targets[i])
 			{
@@ -135,7 +131,7 @@ public Event_PlayerSay(Handle:event, const String:name[], bool:dontBroadcast)
 	// Nope. Relay all chat messages
 	else
 	{
-		for (i = 1; i <= MaxClients; i++)
+		for (new i = 1; i <= MaxClients; i++)
 		{
 			// To all clients (including team messages)
 			if (IsClientInGame(i) && targets[i])
@@ -149,19 +145,23 @@ public Event_PlayerSay(Handle:event, const String:name[], bool:dontBroadcast)
 	}
 
 	// Start message broadcasting for specified clients
-	SayText = StartMessage("SayText", clients, numClients, USERMSG_RELIABLE|USERMSG_BLOCKHOOKS);
+	new Handle:SayText = StartMessage("SayText", clients, numClients, USERMSG_RELIABLE|USERMSG_BLOCKHOOKS);
 
-	// Write author index in bitbuffer
-	BfWriteByte(SayText, client);
+	// Check if user message is valid
+	if (SayText != INVALID_HANDLE)
+	{
+		// Write author index in bitbuffer
+		BfWriteByte(SayText, client);
 
-	// Write message from SayTextHook
-	BfWriteString(SayText, message);
+		// Write message from SayTextHook
+		BfWriteString(SayText, message);
 
-	// Colorize author's nickname in color
-	BfWriteByte(SayText, -1);
+		// Colorize author's nickname in color
+		BfWriteByte(SayText, -1);
 
-	// End a message (it's like close handle), otherwise all PrintToChat natives will not work
-	EndMessage();
+		// End a message (like close handle), otherwise all PrintToChat natives will not work
+		EndMessage();
+	}
 }
 
 /* Command_Say()
