@@ -4,7 +4,7 @@
 * Description:
 *   Provides a support to relay chat messages of dead players, spectators or a team chat to alive players.
 *
-* Version 2.0
+* Version 3.0
 * Changelog & more info at http://goo.gl/4nKhJ
 */
 
@@ -13,7 +13,7 @@
 
 // ====[ CONSTANTS ]=============================================================
 #define PLUGIN_NAME        "DoD:S All Chat"
-#define PLUGIN_VERSION     "2.0"
+#define PLUGIN_VERSION     "3.0"
 
 #define MAX_MESSAGE_LENGTH 256
 #define DOD_MAXPLAYERS     33
@@ -63,23 +63,17 @@ public OnPluginStart()
  * --------------------------------------------------------------------------- */
 public OnConVarChange(Handle:convar, const String:oldValue[], const String:newValue[])
 {
-	// Convert string to an integer (just strip quotes actually)
 	switch (StringToInt(newValue))
 	{
 		case true:
 		{
-			// Better than RegConsoleCmd for already existing commands
-			AddCommandListener(Command_Say, "say");
-			AddCommandListener(Command_Say, "say_team");
 			HookUserMessage(GetUserMessageId("SayText"), SayTextHook);
-			HookEvent("player_say", Event_PlayerSay);
+			HookEvent("player_say", Event_PlayerSay, EventHookMode_Post);
 		}
 		case false:
 		{
-			RemoveCommandListener(Command_Say, "say");
-			RemoveCommandListener(Command_Say, "say_team");
 			UnhookUserMessage(GetUserMessageId("SayText"), SayTextHook);
-			UnhookEvent("player_say", Event_PlayerSay);
+			UnhookEvent("player_say", Event_PlayerSay, EventHookMode_Post);
 		}
 	}
 }
@@ -90,9 +84,8 @@ public OnConVarChange(Handle:convar, const String:oldValue[], const String:newVa
  * --------------------------------------------------------------------------- */
 public Action:SayTextHook(UserMsg:msg_id, Handle:bf, const players[], playersNum, bool:reliable, bool:init)
 {
-	// Copy the SayText string as global to Player_Say event
+	// Fill global message string
 	BfReadString(bf, message, sizeof(message));
-
 	for (new i = 0; i < playersNum; i++)
 	{
 		targets[players[i]] = false;
@@ -105,18 +98,18 @@ public Action:SayTextHook(UserMsg:msg_id, Handle:bf, const players[], playersNum
  * --------------------------------------------------------------------------- */
 public Event_PlayerSay(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	// We can not rely only on HookUserMessage() because this event can fired more than once for the same chat messages under certain conditions
+	// We can not rely only on UserMessage because this event can fired more than once for the same chat messages under certain conditions
 	// This will result in duplicate messages
-	new clients[MaxClients], numClients;
+	new clients[MaxClients], numClients, client, i;
 
 	// Get message author
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	client = GetClientOfUserId(GetEventInt(event, "userid"));
 
 	// Team chat and convar value is initialized
 	if (IsTeamChat && GetConVarBool(allchat_team))
 	{
 		// Then send this message to all team mates
-		for (new i = 1; i <= MaxClients; i++)
+		for (i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i) && GetClientTeam(i) == GetClientTeam(client) && targets[i])
 			{
@@ -127,11 +120,9 @@ public Event_PlayerSay(Handle:event, const String:name[], bool:dontBroadcast)
 			targets[i] = false;
 		}
 	}
-
-	// Nope. Relay all chat messages
-	else
+	else // Nope. Relay all chat messages
 	{
-		for (new i = 1; i <= MaxClients; i++)
+		for (i = 1; i <= MaxClients; i++)
 		{
 			// To all clients (including team messages)
 			if (IsClientInGame(i) && targets[i])
@@ -156,10 +147,10 @@ public Event_PlayerSay(Handle:event, const String:name[], bool:dontBroadcast)
 		// Write message from SayTextHook
 		BfWriteString(SayText, message);
 
-		// Colorize author's nickname in color
+		// And colorize author's nickname
 		BfWriteByte(SayText, -1);
 
-		// End a message (like close handle), otherwise all PrintToChat natives will not work
+		// End a message (like close handle), otherwise all PrintToChat natives will not work!
 		EndMessage();
 	}
 }
@@ -168,7 +159,7 @@ public Event_PlayerSay(Handle:event, const String:name[], bool:dontBroadcast)
  *
  * When the chat message is received in global chat.
  * ------------------------------------------------------------------------------ */
-public Action:Command_Say(client, const String:command[], argc)
+public OnClientSayCommand_Post(client, const String:command[], const String:sArgs[])
 {
 	// When player is saying something, make sure all clients will receive a message
 	for (new target = 1; target <= MaxClients; target++)
@@ -176,15 +167,14 @@ public Action:Command_Say(client, const String:command[], argc)
 		targets[target] = true;
 	}
 
-	// Does say_team command was sent?
-	if (StrEqual(command, "say_team", false))
-	{
-		IsTeamChat = true;
-	}
-
-	// Nope, so dont filter anything
-	else
+	// Does "say" command was used?
+	if (StrEqual(command, "say", false))
 	{
 		IsTeamChat = false;
+	}
+	else
+	{
+		// Nope, so make sure that was a team chat
+		IsTeamChat = true;
 	}
 }
