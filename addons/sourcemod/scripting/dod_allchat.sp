@@ -50,11 +50,11 @@ public OnPluginStart()
 	// Hook only enable ConVar value changes
 	HookConVarChange(allchat_enable, OnConVarChange);
 
-	// Create and exec plugin's config
-	AutoExecConfig(true, "dod_allchat");
-
 	// Manually trigger OnConVarChange to hook all the stuff
 	OnConVarChange(allchat_enable, "0", "1");
+
+	// Create and exec plugin's config
+	AutoExecConfig(true, "dod_allchat");
 }
 
 /* OnConVarChange()
