@@ -159,7 +159,7 @@ public Event_PlayerSay(Handle:event, const String:name[], bool:dontBroadcast)
  *
  * When the chat message is received in global chat.
  * ------------------------------------------------------------------------------ */
-public OnClientSayCommand_Post(client, const String:command[], const String:sArgs[])
+public Action:OnClientSayCommand(client, const String:command[], const String:sArgs[])
 {
 	// When player is saying something, make sure all clients will receive a message
 	for (new target = 1; target <= MaxClients; target++)
@@ -174,7 +174,7 @@ public OnClientSayCommand_Post(client, const String:command[], const String:sArg
 	}
 	else
 	{
-		// Nope, so make sure that was a team chat
+		// Nope, that was definitely a team chat
 		IsTeamChat = true;
 	}
 }
