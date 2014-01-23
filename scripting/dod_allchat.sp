@@ -165,6 +165,6 @@ public Action:OnClientSayCommand(client, const String:command[], const String:sA
 		targets[target] = true;
 	}
 
-	// Set team chat bool
-	IsTeamChat = StrEqual(command, "say", false);
+	// Get teamchat bool
+	IsTeamChat = !StrEqual(command, "say", false);
 }
