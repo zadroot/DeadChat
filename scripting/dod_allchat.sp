@@ -159,12 +159,12 @@ public Event_PlayerSay(Handle:event, const String:name[], bool:dontBroadcast)
  * ---------------------------------------------------------------------------- */
 public Action:OnClientSayCommand(client, const String:command[], const String:sArgs[])
 {
-	// When player is saying something - make sure all clients will receive a message
+	// When player says something - loop through all players and assign boolean
 	for (new target = 1; target <= MaxClients; target++)
 	{
 		targets[target] = true;
 	}
 
-	// Get teamchat bool
-	IsTeamChat = !StrEqual(command, "say", false);
+	// It was a team chat?
+	IsTeamChat = StrEqual(command, "say_team", false);
 }
